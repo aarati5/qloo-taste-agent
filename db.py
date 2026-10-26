@@ -76,3 +76,16 @@ def get_consent(user_id):
     ).fetchall()
     conn.close()
     return {r["category"]: bool(r["allowed"]) for r in rows}
+    
+def seed_demo():
+    """Fill the demo profile if empty (free hosting resets the database)."""
+    conn = get_conn()
+    n = conn.execute(
+        "SELECT COUNT(*) FROM favourites WHERE user_id = 'demo'"
+    ).fetchone()[0]
+    conn.close()
+    if n == 0:
+        for cat, name in [("music", "Radiohead"), ("movies", "Her"),
+                          ("food", "Biryani"), ("travel", "Hampi")]:
+            add_favourite("demo", cat, name)
+        set_consent("demo", "food", False)

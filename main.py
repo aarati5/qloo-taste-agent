@@ -7,6 +7,7 @@ from fastapi.responses import FileResponse
 
 app = FastAPI()
 db.init_db()
+db.seed_demo()
 
 
 class Favourite(BaseModel):
