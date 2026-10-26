@@ -43,7 +43,12 @@
 </div>
 
 <script>
-const U = "demo", CATS = ["music", "food", "movies", "travel"];
+const CATS = ["music", "food", "movies", "travel"];
+let U = localStorage.getItem("tp_user");
+if (!U) {
+  U = "u-" + Math.random().toString(36).slice(2, 12);
+  localStorage.setItem("tp_user", U);
+}
 const J = {"Content-Type": "application/json"};
 
 async function load() {
@@ -95,7 +100,7 @@ async function ask() {
     s.textContent = "Something went wrong: " + e.message + ". Please try again.";
   }
 }
-load();
+fetch("/init/" + U, {method: "POST"}).then(load);
 </script>
 </body>
 </html>

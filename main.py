@@ -1,9 +1,12 @@
+import re
+
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from qloo_client import API_KEY
+
 import db
 from agent import ask
-from fastapi.responses import FileResponse
+from qloo_client import API_KEY
 
 app = FastAPI()
 db.init_db()
@@ -56,6 +59,15 @@ def profile(user_id: str, only_allowed: bool = False):
 @app.post("/ask")
 def ask_endpoint(a: Ask):
     return ask(a.user_id, a.question, a.use_passport)
+
+
+@app.post("/init/{user_id}")
+def init_user(user_id: str):
+    if not re.fullmatch(r"[A-Za-z0-9-]{3,40}", user_id):
+        return {"ok": False}
+    db.seed_user(user_id)
+    return {"ok": True}
+
 
 @app.get("/")
 def home():
