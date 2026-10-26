@@ -1,10 +1,12 @@
-import time
 import os
+import time
+
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
+
 import db
-from qloo_client import API_KEY as QLOO_KEY
+from qloo_client import API_KEY as QLOO_KEY, search_entity, get_insights
 
 load_dotenv()
 client = genai.Client(
@@ -18,7 +20,9 @@ SYSTEM = (
     "First call get_taste_profile. Then call recommend for each relevant category. "
     "Use only what the tools return and explain briefly why each pick fits the user. "
     "If a tool says a category is not allowed, do not guess that category; "
-    "tell the user you don't have access to it."
+    "tell the user you don't have access to it. "
+    "If a tool result has source 'demo-data', say the suggestions are sample data. "
+    "If a tool returns an error, say so plainly and do not invent recommendations. "
     "Reply in plain text only. No markdown, no asterisks, no # headings. "
     "Use short lines starting with a dash for lists."
 )
@@ -47,11 +51,33 @@ def make_tools(user_id: str, trace: list):
             return {"error": f"The user has not allowed access to '{category}'."}
         favs = [f["name"] for f in db.get_favourites(user_id, only_allowed=True)
                 if f["category"] == category]
-        items = DEMO_RECS.get(category, [])
+
+        if QLOO_KEY:
+            try:
+                ids = []
+                for n in favs[:5]:
+                    hit = search_entity(n)
+                    if hit and hit[0]:
+                        ids.append(hit[0])
+                if not ids:
+                    return {"error": "No saved favourites for this category could be matched in Qloo."}
+                items = get_insights(ids, category)
+                return {
+                    "source": "qloo",
+                    "based_on": favs[:5],
+                    "items": [
+                        {"name": i["name"], "why": f"Qloo links this to your taste in: {', '.join(favs[:5])}"}
+                        for i in items
+                    ],
+                }
+            except Exception:
+                return {"error": "Qloo is not responding right now. Please try again."}
+
         base = favs[0] if favs else "your saved taste"
         return {
             "source": "demo-data",
-            "items": [{"name": n, "why": f"Similar in mood to {base}"} for n in items],
+            "items": [{"name": n, "why": f"Similar in mood to {base}"}
+                      for n in DEMO_RECS.get(category, [])],
         }
 
     return [get_taste_profile, recommend]
