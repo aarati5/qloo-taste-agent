@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from qloo_client import API_KEY
 import db
+from agent import ask
 
 app = FastAPI()
 db.init_db()
@@ -17,6 +18,12 @@ class Consent(BaseModel):
     user_id: str = "demo"
     category: str
     allowed: bool
+
+
+class Ask(BaseModel):
+    user_id: str = "demo"
+    question: str
+    use_passport: bool = True
 
 
 @app.get("/health")
@@ -42,3 +49,8 @@ def profile(user_id: str, only_allowed: bool = False):
         "favourites": db.get_favourites(user_id, only_allowed),
         "consent": db.get_consent(user_id),
     }
+
+
+@app.post("/ask")
+def ask_endpoint(a: Ask):
+    return ask(a.user_id, a.question, a.use_passport)
