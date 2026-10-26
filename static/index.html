@@ -5,101 +5,352 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Taste Passport</title>
 <style>
- body{font-family:system-ui,sans-serif;max-width:760px;margin:24px auto;padding:0 16px;color:#1a1a1a}
- .card{border:1px solid #ddd;border-radius:10px;padding:16px;margin:16px 0}
- input,select,textarea,button{font:inherit;padding:8px;margin:4px 0}
- textarea,input[type=text]{width:100%;box-sizing:border-box}
- button{cursor:pointer}
- #answer{white-space:pre-wrap;background:#f6f6f6;padding:12px;border-radius:8px}
- .muted{color:#666;font-size:.9em}
- label{margin-right:14px}
+  :root{
+    --ink:#0f172a; --muted:#64748b; --line:#e2e8f0; --card:#ffffff; --bg:#f4f6fb;
+    --brand:#4f46e5; --brand2:#0d9488; --amber:#d97706;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; color:var(--ink); background:var(--bg); min-height:100vh;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  .wrap{max-width:840px;margin:0 auto;padding:0 16px 48px}
+
+  /* ---------- Header ---------- */
+  header{
+    position:relative; overflow:hidden; color:#fff; padding:42px 0 72px;
+    background:linear-gradient(120deg,#0b1220,#1e1b4b,#0f4c5c,#1e1b4b,#0b1220);
+    background-size:300% 300%; animation:flow 16s ease-in-out infinite;
+    border-radius:0 0 32px 32px;
+  }
+  header .orb{position:absolute;border-radius:50%;filter:blur(40px);opacity:.45;animation:float 9s ease-in-out infinite}
+  header .o1{width:240px;height:240px;background:#4f46e5;right:-60px;top:-80px}
+  header .o2{width:200px;height:200px;background:#0d9488;left:-50px;bottom:-90px;animation-delay:-4s}
+  header .plane{position:absolute;right:48px;top:34px;font-size:54px;opacity:.9;animation:fly 6s ease-in-out infinite}
+  header .inner{position:relative;z-index:1;animation:rise .8s both}
+  .stamp{
+    display:inline-block;border:1.5px dashed rgba(255,255,255,.6);border-radius:8px;
+    padding:4px 12px;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:14px;
+    animation:glow 3s ease-in-out infinite;
+  }
+  h1{margin:0 0 8px;font-size:38px;letter-spacing:-.8px}
+  header p{margin:0;opacity:.85;max-width:560px;line-height:1.6}
+
+  /* ---------- Cards ---------- */
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;margin:0 0 18px;
+    box-shadow:0 10px 30px rgba(15,23,42,.06);animation:rise .7s both;
+  }
+  .c1{margin-top:-40px;animation-delay:.15s}
+  .c2{animation-delay:.3s}
+  .c3{animation-delay:.45s}
+  .card h2{margin:0 0 4px;font-size:18px;display:flex;align-items:center}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 16px}
+  .num{
+    display:inline-grid;place-items:center;width:26px;height:26px;border-radius:8px;margin-right:10px;
+    background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;font-size:13px;font-weight:700;
+  }
+  .row{display:flex;gap:8px;flex-wrap:wrap}
+  select,input[type=text],textarea,button{font:inherit}
+  select,input[type=text],textarea{
+    border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff;color:var(--ink);
+    transition:border-color .2s, box-shadow .2s;
+  }
+  select:focus,input:focus,textarea:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 4px rgba(79,70,229,.12)}
+  input[type=text]{flex:1;min-width:160px}
+  textarea{width:100%;resize:vertical}
+
+  .btn{
+    position:relative;overflow:hidden;border:0;border-radius:12px;padding:11px 20px;cursor:pointer;
+    font-weight:600;color:#fff;background:linear-gradient(135deg,var(--brand),#6366f1 50%,var(--brand2));
+    background-size:200% 200%;transition:transform .15s, box-shadow .25s, background-position .4s;
+  }
+  .btn::after{
+    content:"";position:absolute;top:0;left:-70%;width:50%;height:100%;
+    background:linear-gradient(100deg,transparent,rgba(255,255,255,.45),transparent);transform:skewX(-20deg);
+  }
+  .btn:hover{transform:translateY(-2px);box-shadow:0 10px 22px rgba(79,70,229,.3);background-position:100% 0}
+  .btn:hover::after{animation:shine .8s}
+  .btn:active{transform:translateY(0) scale(.98)}
+  .btn:disabled{opacity:.65;cursor:wait;transform:none}
+
+  /* ---------- Chips ---------- */
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;min-height:34px}
+  .chip{
+    display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:7px 14px;font-size:14px;font-weight:500;
+    border:1.5px solid var(--c);background:color-mix(in srgb,var(--c) 9%,#fff);color:var(--ink);
+    animation:pop .5s cubic-bezier(.34,1.56,.64,1) both;animation-delay:calc(var(--i) * 70ms);
+    transition:transform .2s, box-shadow .2s;
+  }
+  .chip:hover{transform:translateY(-2px);box-shadow:0 6px 14px color-mix(in srgb,var(--c) 30%,transparent)}
+  .chip.locked{filter:grayscale(1);opacity:.5;border-style:dashed;animation:lockin .6s both;animation-delay:calc(var(--i) * 70ms)}
+  .empty{color:var(--muted);font-size:14px}
+
+  /* ---------- Toggles ---------- */
+  .toggles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+  .tog{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;
+    transition:border-color .25s, background .25s, transform .2s;
+    animation:pop .5s cubic-bezier(.34,1.56,.64,1) both;animation-delay:calc(var(--i) * 80ms);
+  }
+  .tog:hover{transform:translateY(-2px);border-color:#c7d2fe}
+  .tog.off{background:#f8fafc}
+  .tog b{display:block;font-size:15px}
+  .tog small{color:var(--muted);transition:color .2s}
+  .tog.off small{color:var(--amber)}
+  .switch{position:relative;width:48px;height:27px;flex:none}
+  .switch input{opacity:0;width:0;height:0}
+  .slider{position:absolute;inset:0;background:#cbd5e1;border-radius:999px;cursor:pointer;transition:background .3s}
+  .slider::before{
+    content:"";position:absolute;width:21px;height:21px;left:3px;top:3px;background:#fff;border-radius:50%;
+    transition:transform .3s cubic-bezier(.34,1.56,.64,1);box-shadow:0 1px 4px rgba(0,0,0,.25);
+  }
+  .switch input:checked + .slider{background:linear-gradient(135deg,var(--brand),var(--brand2))}
+  .switch input:checked + .slider::before{transform:translateX(21px)}
+  .switch input:focus-visible + .slider{box-shadow:0 0 0 4px rgba(79,70,229,.2)}
+
+  /* ---------- Ask ---------- */
+  .examples{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+  .ex{
+    border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:6px 13px;
+    font-size:13px;cursor:pointer;color:var(--muted);transition:all .2s;
+  }
+  .ex:hover{border-color:var(--brand);color:var(--brand);transform:translateY(-1px)}
+  .askrow{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:14px}
+  .ppswitch{display:flex;align-items:center;gap:10px;font-weight:600;cursor:pointer}
+  #answer{
+    margin-top:18px;padding:18px;border-radius:14px;line-height:1.65;display:none;
+    background:linear-gradient(135deg,#f8faff,#f3fbfa);border:1px solid var(--line);
+    border-left:4px solid var(--brand);animation:rise .5s both;
+  }
+  #answer .ln{animation:fadeline .5s both;animation-delay:calc(var(--i) * 70ms);min-height:1.2em}
+  .tag{display:inline-block;border-radius:999px;padding:3px 12px;font-size:12px;font-weight:700;margin-bottom:10px;letter-spacing:.2px}
+  .tag.on{background:#dcfce7;color:#166534}
+  .tag.off{background:#fef3c7;color:#92400e}
+  .dots span{
+    display:inline-block;width:9px;height:9px;margin:0 4px;border-radius:50%;background:var(--brand);
+    animation:bounce 1s infinite ease-in-out;
+  }
+  .dots span:nth-child(2){animation-delay:.15s;background:#6366f1}
+  .dots span:nth-child(3){animation-delay:.3s;background:var(--brand2)}
+  .steps{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px;font-size:12px;color:var(--muted)}
+  .step{
+    background:#eef2ff;color:#3730a3;border-radius:8px;padding:4px 10px;
+    font-family:ui-monospace,Consolas,monospace;animation:pop .45s cubic-bezier(.34,1.56,.64,1) both;
+    animation-delay:calc(var(--i) * 160ms);
+  }
+  .arrow{animation:fadeline .4s both;animation-delay:calc(var(--i) * 160ms)}
+  footer{text-align:center;color:var(--muted);font-size:13px;margin-top:28px}
+
+  /* ---------- Keyframes ---------- */
+  @keyframes flow{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+  @keyframes float{0%,100%{transform:translateY(0) translateX(0)}50%{transform:translateY(22px) translateX(14px)}}
+  @keyframes fly{0%,100%{transform:translate(0,0) rotate(-4deg)}50%{transform:translate(-14px,-10px) rotate(4deg)}}
+  @keyframes glow{0%,100%{box-shadow:0 0 0 rgba(255,255,255,0)}50%{box-shadow:0 0 18px rgba(255,255,255,.35)}}
+  @keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+  @keyframes pop{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:none}}
+  @keyframes lockin{0%{opacity:0;transform:scale(.8)}40%{transform:rotate(-4deg)}60%{transform:rotate(4deg)}100%{opacity:.5;transform:none}}
+  @keyframes shine{to{left:130%}}
+  @keyframes bounce{0%,80%,100%{transform:scale(.5);opacity:.4}40%{transform:scale(1);opacity:1}}
+  @keyframes fadeline{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-<h1>Taste Passport</h1>
-<p class="muted">Your taste in one place. AI agents can use it only for the categories you allow. Powered by Qloo.</p>
+<header>
+  <div class="orb o1"></div><div class="orb o2"></div>
+  <div class="plane">✈</div>
+  <div class="wrap inner" style="padding-bottom:0">
+    <div class="stamp">Taste ID · Passport</div>
+    <h1>Taste Passport</h1>
+    <p>Your taste, in one place. AI agents can use it only for the categories you allow, and the privacy rule is enforced inside the agent’s tools.</p>
+  </div>
+</header>
 
-<div class="card">
- <h3>1. Your favourites</h3>
- <select id="cat"><option>music</option><option>food</option><option>movies</option><option>travel</option></select>
- <input type="text" id="fav" placeholder="e.g. Radiohead">
- <button onclick="addFav()">Add</button>
- <div id="favs"></div>
-</div>
+<div class="wrap">
+  <div class="card c1">
+    <h2><span class="num">1</span>Your favourites</h2>
+    <p class="sub">Add a few things you love. Dimmed chips with a 🔒 are hidden from the agent.</p>
+    <div class="row">
+      <select id="cat">
+        <option value="music">🎵 music</option>
+        <option value="movies">🎬 movies</option>
+        <option value="food">🍜 food</option>
+        <option value="travel">✈️ travel</option>
+      </select>
+      <input type="text" id="fav" placeholder="e.g. Radiohead" maxlength="80">
+      <button class="btn" onclick="addFav()">Add</button>
+    </div>
+    <div class="chips" id="favs"></div>
+  </div>
 
-<div class="card">
- <h3>2. What can agents see?</h3>
- <div id="consent"></div>
-</div>
+  <div class="card c2">
+    <h2><span class="num">2</span>What can agents see?</h2>
+    <p class="sub">Switch a category off and the agent never receives it.</p>
+    <div class="toggles" id="consent"></div>
+  </div>
 
-<div class="card">
- <h3>3. Ask the agent</h3>
- <textarea id="q" rows="3">Plan a relaxed weekend in Goa: what music should I listen to and where should I eat?</textarea>
- <label><input type="checkbox" id="pp" checked> Use my Taste Passport</label><br>
- <button onclick="ask()">Ask</button>
- <p id="status" class="muted"></p>
- <div id="answer"></div>
- <p class="muted" id="trace"></p>
+  <div class="card c3">
+    <h2><span class="num">3</span>Ask the agent</h2>
+    <p class="sub">Ask the same question with the Passport on and off to see the difference.</p>
+    <div class="examples" id="examples"></div>
+    <textarea id="q" rows="3">Plan a relaxed weekend in Goa: what music should I listen to and where should I eat?</textarea>
+    <div class="askrow">
+      <label class="ppswitch">
+        <span class="switch">
+          <input type="checkbox" id="pp" checked onchange="ppLabel()">
+          <span class="slider"></span>
+        </span>
+        <span id="pplabel">Taste Passport: ON</span>
+      </label>
+      <button class="btn" id="askbtn" onclick="ask()">Ask the agent ✨</button>
+    </div>
+    <div id="answer"></div>
+    <div class="steps" id="trace"></div>
+  </div>
+
+  <footer>Built for the Qloo Agentic Hackathon · First load on free hosting can take up to a minute</footer>
 </div>
 
 <script>
-const CATS = ["music", "food", "movies", "travel"];
+const CATS = {
+  music:  {emoji: "🎵", color: "#6366f1"},
+  movies: {emoji: "🎬", color: "#e11d48"},
+  food:   {emoji: "🍜", color: "#d97706"},
+  travel: {emoji: "✈️", color: "#0891b2"}
+};
+const EXAMPLES = [
+  "Plan a relaxed weekend in Goa: what music should I listen to and where should I eat?",
+  "Suggest a movie night and some music for tonight.",
+  "I have 3 days in Hampi. What should I watch and listen to on the way?"
+];
+const J = {"Content-Type": "application/json"};
+
 let U = localStorage.getItem("tp_user");
 if (!U) {
   U = "u-" + Math.random().toString(36).slice(2, 12);
   localStorage.setItem("tp_user", U);
 }
-const J = {"Content-Type": "application/json"};
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
 
 async function load() {
   const d = await (await fetch(`/profile/${U}?only_allowed=false`)).json();
-  const f = document.getElementById("favs"); f.textContent = "";
-  d.favourites.forEach(x => {
-    const p = document.createElement("div");
-    p.textContent = `${x.category}: ${x.name}`;
-    f.appendChild(p);
+
+  const chips = document.getElementById("favs");
+  chips.textContent = "";
+  if (!d.favourites.length) chips.appendChild(el("span", "empty", "No favourites yet. Add one above."));
+  d.favourites.forEach((f, i) => {
+    const meta = CATS[f.category] || {emoji: "⭐", color: "#4f46e5"};
+    const locked = d.consent[f.category] === false;
+    const c = el("span", "chip" + (locked ? " locked" : ""),
+      (locked ? "🔒 " : meta.emoji + " ") + f.name);
+    c.style.setProperty("--c", meta.color);
+    c.style.setProperty("--i", i);
+    chips.appendChild(c);
   });
-  const c = document.getElementById("consent"); c.textContent = "";
-  CATS.forEach(k => {
-    const l = document.createElement("label");
+
+  const box = document.getElementById("consent");
+  box.textContent = "";
+  Object.keys(CATS).forEach((k, i) => {
+    const allowed = d.consent[k] !== false;
+    const row = el("div", "tog" + (allowed ? "" : " off"));
+    row.style.setProperty("--i", i);
+    const left = el("div");
+    left.appendChild(el("b", "", CATS[k].emoji + " " + k));
+    left.appendChild(el("small", "", allowed ? "Agent can see" : "Hidden from agent"));
+    const sw = el("label", "switch");
     const cb = document.createElement("input");
     cb.type = "checkbox";
-    cb.checked = d.consent[k] !== false;
-    cb.onchange = () => setConsent(k, cb.checked);
-    l.appendChild(cb); l.append(" " + k); c.appendChild(l);
+    cb.checked = allowed;
+    cb.onchange = async () => { await setConsent(k, cb.checked); load(); };
+    sw.appendChild(cb);
+    sw.appendChild(el("span", "slider"));
+    row.appendChild(left);
+    row.appendChild(sw);
+    box.appendChild(row);
   });
 }
+
 async function addFav() {
-  const name = document.getElementById("fav").value.trim();
+  const input = document.getElementById("fav");
+  const name = input.value.trim();
   if (!name) return;
   await fetch("/favourites", {method: "POST", headers: J,
     body: JSON.stringify({user_id: U, category: document.getElementById("cat").value, name})});
-  document.getElementById("fav").value = "";
+  input.value = "";
   load();
 }
+
 async function setConsent(category, allowed) {
   await fetch("/consent", {method: "POST", headers: J,
     body: JSON.stringify({user_id: U, category, allowed})});
 }
+
+function ppLabel() {
+  document.getElementById("pplabel").textContent =
+    "Taste Passport: " + (document.getElementById("pp").checked ? "ON" : "OFF");
+}
+
 async function ask() {
-  const s = document.getElementById("status");
-  s.textContent = "Thinking... (can take up to 30 seconds)";
-  document.getElementById("answer").textContent = "";
-  document.getElementById("trace").textContent = "";
+  const btn = document.getElementById("askbtn");
+  const ans = document.getElementById("answer");
+  const trace = document.getElementById("trace");
+  const usePassport = document.getElementById("pp").checked;
+  btn.disabled = true;
+  trace.textContent = "";
+  ans.style.display = "block";
+  ans.textContent = "";
+  const dots = el("div", "dots");
+  for (let i = 0; i < 3; i++) dots.appendChild(el("span"));
+  ans.appendChild(dots);
   try {
     const r = await fetch("/ask", {method: "POST", headers: J, body: JSON.stringify({
-      user_id: U, question: document.getElementById("q").value,
-      use_passport: document.getElementById("pp").checked})});
+      user_id: U, question: document.getElementById("q").value, use_passport: usePassport})});
     if (!r.ok) throw new Error("Server error " + r.status);
     const d = await r.json();
-    s.textContent = "";
-    document.getElementById("answer").textContent = d.answer;
-    document.getElementById("trace").textContent =
-      d.trace && d.trace.length ? "Agent steps: " + d.trace.join(" → ") : "";
+    ans.textContent = "";
+    ans.appendChild(el("div", "tag " + (usePassport ? "on" : "off"),
+      usePassport ? "With your Taste Passport" : "Without Taste Passport (generic)"));
+    String(d.answer || "").split("\n").forEach((line, i) => {
+      const l = el("div", "ln", line);
+      l.style.setProperty("--i", i);
+      ans.appendChild(l);
+    });
+    if (d.trace && d.trace.length) {
+      trace.appendChild(el("span", "", "Agent steps:"));
+      d.trace.forEach((t, i) => {
+        if (i) {
+          const a = el("span", "arrow", "→");
+          a.style.setProperty("--i", i);
+          trace.appendChild(a);
+        }
+        const s = el("span", "step", t);
+        s.style.setProperty("--i", i);
+        trace.appendChild(s);
+      });
+    }
   } catch (e) {
-    s.textContent = "Something went wrong: " + e.message + ". Please try again.";
+    ans.textContent = "Something went wrong: " + e.message + ". Please try again.";
   }
+  btn.disabled = false;
 }
+
+const ex = document.getElementById("examples");
+EXAMPLES.forEach(t => {
+  const b = el("button", "ex", t.length > 44 ? t.slice(0, 42) + "…" : t);
+  b.type = "button";
+  b.onclick = () => { document.getElementById("q").value = t; };
+  ex.appendChild(b);
+});
+document.getElementById("fav").addEventListener("keydown", e => { if (e.key === "Enter") addFav(); });
+
 fetch("/init/" + U, {method: "POST"}).then(load);
 </script>
 </body>
