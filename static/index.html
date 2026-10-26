@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Taste Passport</title>
+<style>
+ body{font-family:system-ui,sans-serif;max-width:760px;margin:24px auto;padding:0 16px;color:#1a1a1a}
+ .card{border:1px solid #ddd;border-radius:10px;padding:16px;margin:16px 0}
+ input,select,textarea,button{font:inherit;padding:8px;margin:4px 0}
+ textarea,input[type=text]{width:100%;box-sizing:border-box}
+ button{cursor:pointer}
+ #answer{white-space:pre-wrap;background:#f6f6f6;padding:12px;border-radius:8px}
+ .muted{color:#666;font-size:.9em}
+ label{margin-right:14px}
+</style>
+</head>
+<body>
+<h1>Taste Passport</h1>
+<p class="muted">Your taste in one place. AI agents can use it only for the categories you allow. Powered by Qloo.</p>
+
+<div class="card">
+ <h3>1. Your favourites</h3>
+ <select id="cat"><option>music</option><option>food</option><option>movies</option><option>travel</option></select>
+ <input type="text" id="fav" placeholder="e.g. Radiohead">
+ <button onclick="addFav()">Add</button>
+ <div id="favs"></div>
+</div>
+
+<div class="card">
+ <h3>2. What can agents see?</h3>
+ <div id="consent"></div>
+</div>
+
+<div class="card">
+ <h3>3. Ask the agent</h3>
+ <textarea id="q" rows="3">Plan a relaxed weekend in Goa: what music should I listen to and where should I eat?</textarea>
+ <label><input type="checkbox" id="pp" checked> Use my Taste Passport</label><br>
+ <button onclick="ask()">Ask</button>
+ <p id="status" class="muted"></p>
+ <div id="answer"></div>
+ <p class="muted" id="trace"></p>
+</div>
+
+<script>
+const U = "demo", CATS = ["music", "food", "movies", "travel"];
+const J = {"Content-Type": "application/json"};
+
+async function load() {
+  const d = await (await fetch(`/profile/${U}?only_allowed=false`)).json();
+  const f = document.getElementById("favs"); f.textContent = "";
+  d.favourites.forEach(x => {
+    const p = document.createElement("div");
+    p.textContent = `${x.category}: ${x.name}`;
+    f.appendChild(p);
+  });
+  const c = document.getElementById("consent"); c.textContent = "";
+  CATS.forEach(k => {
+    const l = document.createElement("label");
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = d.consent[k] !== false;
+    cb.onchange = () => setConsent(k, cb.checked);
+    l.appendChild(cb); l.append(" " + k); c.appendChild(l);
+  });
+}
+async function addFav() {
+  const name = document.getElementById("fav").value.trim();
+  if (!name) return;
+  await fetch("/favourites", {method: "POST", headers: J,
+    body: JSON.stringify({user_id: U, category: document.getElementById("cat").value, name})});
+  document.getElementById("fav").value = "";
+  load();
+}
+async function setConsent(category, allowed) {
+  await fetch("/consent", {method: "POST", headers: J,
+    body: JSON.stringify({user_id: U, category, allowed})});
+}
+async function ask() {
+  const s = document.getElementById("status");
+  s.textContent = "Thinking... (can take up to 30 seconds)";
+  document.getElementById("answer").textContent = "";
+  document.getElementById("trace").textContent = "";
+  try {
+    const r = await fetch("/ask", {method: "POST", headers: J, body: JSON.stringify({
+      user_id: U, question: document.getElementById("q").value,
+      use_passport: document.getElementById("pp").checked})});
+    if (!r.ok) throw new Error("Server error " + r.status);
+    const d = await r.json();
+    s.textContent = "";
+    document.getElementById("answer").textContent = d.answer;
+    document.getElementById("trace").textContent =
+      d.trace && d.trace.length ? "Agent steps: " + d.trace.join(" → ") : "";
+  } catch (e) {
+    s.textContent = "Something went wrong: " + e.message + ". Please try again.";
+  }
+}
+load();
+</script>
+</body>
+</html>

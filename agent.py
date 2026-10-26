@@ -7,8 +7,11 @@ import db
 from qloo_client import API_KEY as QLOO_KEY
 
 load_dotenv()
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
-MODELS = ["gemini-3.8-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite"]
+client = genai.Client(
+    api_key=os.getenv("GEMINI_API_KEY"),
+    http_options=types.HttpOptions(timeout=20000),
+)
+MODELS = ["gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.8-flash"]
 
 SYSTEM = (
     "You are a personal assistant with access to the user's Taste Passport. "
@@ -65,7 +68,7 @@ def ask(user_id: str, question: str, use_passport: bool = True) -> dict:
 
     last_error = ""
     for model in MODELS:
-        for attempt in range(2):
+        for attempt in range(1):
             trace.clear()
             try:
                 resp = client.models.generate_content(
@@ -81,7 +84,7 @@ def ask(user_id: str, question: str, use_passport: bool = True) -> dict:
                 last_error = str(e)
                 busy = any(k in last_error for k in ("503", "429", "UNAVAILABLE", "RESOURCE_EXHAUSTED"))
                 if busy:
-                    time.sleep(2 * (attempt + 1))
+                    time.sleep(1)
                     continue
                 break  # other errors (e.g. 404): try next model
 

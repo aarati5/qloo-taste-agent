@@ -3,6 +3,7 @@ from pydantic import BaseModel
 from qloo_client import API_KEY
 import db
 from agent import ask
+from fastapi.responses import FileResponse
 
 app = FastAPI()
 db.init_db()
@@ -54,3 +55,7 @@ def profile(user_id: str, only_allowed: bool = False):
 @app.post("/ask")
 def ask_endpoint(a: Ask):
     return ask(a.user_id, a.question, a.use_passport)
+
+@app.get("/")
+def home():
+    return FileResponse("static/index.html")
