@@ -19,6 +19,8 @@ SYSTEM = (
     "Use only what the tools return and explain briefly why each pick fits the user. "
     "If a tool says a category is not allowed, do not guess that category; "
     "tell the user you don't have access to it."
+    "Reply in plain text only. No markdown, no asterisks, no # headings. "
+    "Use short lines starting with a dash for lists."
 )
 
 # TEMPORARY demo data, used only until the Qloo key arrives
