@@ -24,6 +24,8 @@ SYSTEM = (
     "If a tool result has source 'demo-data', say the suggestions are sample data. "
     "If a tool returns an error, say so plainly and do not invent recommendations. "
     "For Qloo results, explain each pick using only its qloo_match_percent, tags and about fields. "
+    "For food recommendations a city is required. If the user did not name a city, "
+    "ask which city they mean and do not call recommend for food. "
     "Reply in plain text only. No markdown, no asterisks, no # headings. "
     "Use short lines starting with a dash for lists."
 )
@@ -45,11 +47,16 @@ def make_tools(user_id: str, trace: list):
         return {"favourites": [{"category": f["category"], "name": f["name"]} for f in favs]}
 
     def recommend(category: str, city: str = "") -> dict:
-        """Taste-matched recommendations for one category (music, food, movies or travel). City is optional and mainly used for food."""
+        """Taste-matched recommendations for one category (music, food, movies or travel). City is required for food."""
         trace.append(f"recommend({category}, {city})")
+
         consent = db.get_consent(user_id)
         if consent.get(category, True) is False:
             return {"error": f"The user has not allowed access to '{category}'."}
+
+        if category == "food" and not city.strip():
+            return {"error": "Food recommendations need a city. Ask the user which city they mean."}
+
         favs = [f["name"] for f in db.get_favourites(user_id, only_allowed=True)
                 if f["category"] == category]
 
@@ -77,7 +84,8 @@ def make_tools(user_id: str, trace: list):
                         for i in items
                     ],
                 }
-            except Exception:
+            except Exception as e:
+                print("QLOO ERROR:", repr(e))
                 return {"error": "Qloo is not responding right now. Please try again."}
 
         base = favs[0] if favs else "your saved taste"
