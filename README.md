@@ -17,6 +17,18 @@ Built for the Qloo Agentic Hackathon.
 ## How it works
 Browser -> FastAPI server -> AI agent (Gemini) -> tools (`get_taste_profile`, `recommend`) -> SQLite passport + consent layer.
 
+
+## How Qloo is used
+Qloo is the recommendation engine behind the agent's `recommend` tool.
+
+1. **Entity resolution:** each saved favourite is matched to a Qloo entity with the `/search` endpoint, filtered by entity type (artist, movie, destination).
+2. **Taste-based recommendations:** the matched entities are sent as signals to `/v2/insights`, which returns results with an affinity score and tags.
+3. **Food:** dishes are mapped to Qloo tags with `/v2/tags`, and results are filtered to restaurants in the chosen city.
+4. **Grounded answers:** the agent explains each pick using only the match percentage, tags and description returned by Qloo.
+
+Categories the user switches off are blocked inside the tools, so Qloo is never queried for them.
+
+
 ## Run locally
     git clone https://github.com/aarati5/qloo-taste-agent.git
     cd qloo-taste-agent
