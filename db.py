@@ -86,7 +86,7 @@ def seed_demo():
     conn.close()
     if n == 0:
         for cat, name in [("music", "Radiohead"), ("movies", "Her"),
-                          ("food", "Biryani"), ("travel", "Hampi")]:
+                          ("food", "Biryani"), ("travel", "Goa")]:
             add_favourite("demo", cat, name)
         set_consent("demo", "food", False)
 
@@ -99,6 +99,6 @@ def seed_user(user_id: str):
     conn.close()
     if n == 0:
         for cat, name in [("music", "Radiohead"), ("movies", "Her"),
-                          ("food", "Biryani"), ("travel", "Hampi")]:
+                          ("food", "Biryani"), ("travel", "Goa")]:
             add_favourite(user_id, cat, name)
         set_consent(user_id, "food", False)

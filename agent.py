@@ -6,7 +6,7 @@ from google import genai
 from google.genai import types
 
 import db
-from qloo_client import API_KEY as QLOO_KEY, search_entity, get_insights
+from qloo_client import API_KEY as QLOO_KEY, search_entity, find_tag, get_insights
 
 load_dotenv()
 client = genai.Client(
@@ -23,11 +23,12 @@ SYSTEM = (
     "tell the user you don't have access to it. "
     "If a tool result has source 'demo-data', say the suggestions are sample data. "
     "If a tool returns an error, say so plainly and do not invent recommendations. "
+    "For Qloo results, explain each pick using only its qloo_match_percent, tags and about fields. "
     "Reply in plain text only. No markdown, no asterisks, no # headings. "
     "Use short lines starting with a dash for lists."
 )
 
-# TEMPORARY demo data, used only until the Qloo key arrives
+# TEMPORARY demo data, used only when no Qloo key is set
 DEMO_RECS = {
     "music": ["Portishead", "Massive Attack", "Bon Iver"],
     "food": ["Filter coffee cafe", "Hyderabadi biryani house", "Ramen bar"],
@@ -44,7 +45,7 @@ def make_tools(user_id: str, trace: list):
         return {"favourites": [{"category": f["category"], "name": f["name"]} for f in favs]}
 
     def recommend(category: str, city: str = "") -> dict:
-        """Taste-matched recommendations for one category (music, food, movies or travel). City is optional."""
+        """Taste-matched recommendations for one category (music, food, movies or travel). City is optional and mainly used for food."""
         trace.append(f"recommend({category}, {city})")
         consent = db.get_consent(user_id)
         if consent.get(category, True) is False:
@@ -54,19 +55,25 @@ def make_tools(user_id: str, trace: list):
 
         if QLOO_KEY:
             try:
-                ids = []
+                ids, tag_ids = [], []
                 for n in favs[:5]:
-                    hit = search_entity(n)
+                    if category == "food":
+                        t = find_tag(n)
+                        if t:
+                            tag_ids.append(t)
+                            continue
+                    hit = search_entity(n, category)
                     if hit and hit[0]:
                         ids.append(hit[0])
-                if not ids:
-                    return {"error": "No saved favourites for this category could be matched in Qloo."}
-                items = get_insights(ids, category)
+                if not ids and not tag_ids:
+                    return {"error": "None of the saved favourites in this category could be matched in Qloo."}
+                items = get_insights(ids, category, city=city, tag_ids=tag_ids)
                 return {
                     "source": "qloo",
                     "based_on": favs[:5],
                     "items": [
-                        {"name": i["name"], "why": f"Qloo links this to your taste in: {', '.join(favs[:5])}"}
+                        {"name": i["name"], "qloo_match_percent": i["match"],
+                         "tags": i["tags"], "about": i["about"]}
                         for i in items
                     ],
                 }
@@ -91,7 +98,12 @@ def ask(user_id: str, question: str, use_passport: bool = True) -> dict:
         )
     else:
         config = types.GenerateContentConfig(
-            system_instruction="Answer helpfully. You know nothing about the user's personal tastes."
+            system_instruction=(
+                "Answer helpfully. You know nothing about the user's personal tastes. "
+                "Keep the answer under 150 words. "
+                "Reply in plain text only. No markdown, no asterisks, no # headings. "
+                "Use short lines starting with a dash for lists."
+            )
         )
 
     last_error = ""
